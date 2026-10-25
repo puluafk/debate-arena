@@ -1,9 +1,4 @@
-/**
- * Vercel serverless proxy for OpenAI & Gemini.
- * API key is sent by the client per request — not stored on the server.
- */
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -17,98 +12,129 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { provider, apiKey, model, system, messages } = req.body || {};
+    var body = req.body || {};
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        body = {};
+      }
+    }
+
+    var provider = body.provider;
+    var apiKey = body.apiKey;
+    var model = body.model;
+    var system = body.system;
+    var messages = body.messages;
 
     if (!apiKey || typeof apiKey !== "string") {
       return res.status(400).json({ error: "Missing API key" });
     }
-    if (!provider || !["openai", "gemini"].includes(provider)) {
+    if (!provider || (provider !== "openai" && provider !== "gemini")) {
       return res.status(400).json({ error: "Invalid provider" });
     }
 
-    const text =
+    var text =
       provider === "openai"
-        ? await callOpenAI({ apiKey, model, system, messages })
-        : await callGemini({ apiKey, model, system, messages });
+        ? await callOpenAI(apiKey, model, system, messages)
+        : await callGemini(apiKey, model, system, messages);
 
-    return res.status(200).json({ text });
+    return res.status(200).json({ text: text });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
-      error: err.message || "Upstream AI request failed",
+      error: (err && err.message) || "Upstream AI request failed",
     });
   }
-}
+};
 
-async function callOpenAI({ apiKey, model, system, messages }) {
-  const body = {
+async function callOpenAI(apiKey, model, system, messages) {
+  var body = {
     model: model || "gpt-4o-mini",
     temperature: 0.8,
     max_tokens: 400,
-    messages: [
-      { role: "system", content: system || "You are a debate assistant." },
-      ...(messages || []).map((m) => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content,
-      })),
-    ],
+    messages: [{ role: "system", content: system || "You are a debate assistant." }].concat(
+      (messages || []).map(function (m) {
+        return {
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content,
+        };
+      })
+    ),
   };
 
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+  var r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: "Bearer " + apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
   });
 
-  const data = await r.json();
+  var data = await r.json();
   if (!r.ok) {
-    throw new Error(data.error?.message || `OpenAI HTTP ${r.status}`);
+    throw new Error((data.error && data.error.message) || "OpenAI HTTP " + r.status);
   }
-  return data.choices?.[0]?.message?.content?.trim() || "";
+  return (
+    (data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content &&
+      data.choices[0].message.content.trim()) ||
+    ""
+  );
 }
 
-async function callGemini({ apiKey, model, system, messages }) {
-  const modelId = model || "gemini-2.0-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${encodeURIComponent(apiKey)}`;
+async function callGemini(apiKey, model, system, messages) {
+  var modelId = model || "gemini-2.0-flash";
+  var url =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    modelId +
+    ":generateContent?key=" +
+    encodeURIComponent(apiKey);
 
-  const contents = [];
-  for (const m of messages || []) {
-    contents.push({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    });
-  }
-
+  var contents = [];
   if (system) {
-    contents.unshift({
+    contents.push({
       role: "user",
-      parts: [{ text: `[System instructions]\n${system}\n\nFollow these instructions for all replies.` }],
+      parts: [{ text: "[System instructions]\n" + system + "\n\nFollow these instructions for all replies." }],
     });
-    contents.splice(1, 0, {
+    contents.push({
       role: "model",
       parts: [{ text: "Understood. I will follow the instructions." }],
     });
   }
+  (messages || []).forEach(function (m) {
+    contents.push({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    });
+  });
 
-  const r = await fetch(url, {
+  var r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents,
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 400,
-      },
+      contents: contents,
+      generationConfig: { temperature: 0.8, maxOutputTokens: 400 },
     }),
   });
 
-  const data = await r.json();
+  var data = await r.json();
   if (!r.ok) {
-    throw new Error(data.error?.message || `Gemini HTTP ${r.status}`);
+    throw new Error((data.error && data.error.message) || "Gemini HTTP " + r.status);
   }
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
-  return text.trim();
+  var parts =
+    data.candidates &&
+    data.candidates[0] &&
+    data.candidates[0].content &&
+    data.candidates[0].content.parts;
+  if (!parts) return "";
+  return parts
+    .map(function (p) {
+      return p.text || "";
+    })
+    .join("")
+    .trim();
 }

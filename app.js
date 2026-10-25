@@ -15,8 +15,7 @@ function loadSettings() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (raw) return raw;
-  } catch {}
-  // migrate v1
+  } catch (e) {}
   try {
     const v1 = JSON.parse(localStorage.getItem("debate_arena_settings_v1"));
     if (v1) {
@@ -28,7 +27,7 @@ function loadSettings() {
         geminiModel: v1.provider === "gemini" ? v1.model || "gemini-2.0-flash" : "gemini-2.0-flash",
       };
     }
-  } catch {}
+  } catch (e) {}
   return {
     provider: "demo",
     openaiKey: "",
@@ -45,6 +44,7 @@ function saveSettings() {
 
 function updateProviderBadge() {
   const el = document.getElementById("provider-badge");
+  if (!el) return;
   const p = state.settings.provider;
   const hasOpenAI = !!state.settings.openaiKey;
   const hasGemini = !!state.settings.geminiKey;
@@ -61,12 +61,15 @@ function updateProviderBadge() {
 }
 
 function showScreen(id) {
-  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".screen").forEach(function (s) {
+    s.classList.remove("active");
+  });
+  var screen = document.getElementById(id);
+  if (screen) screen.classList.add("active");
 }
 
 function activeApiConfig() {
-  const s = state.settings;
+  var s = state.settings;
   if (s.provider === "openai" && s.openaiKey) {
     return { provider: "openai", apiKey: s.openaiKey, model: s.openaiModel || "gpt-4o-mini" };
   }
@@ -76,87 +79,99 @@ function activeApiConfig() {
   return null;
 }
 
-async function callAI({ system, user }) {
-  const cfg = activeApiConfig();
+async function callAI(opts) {
+  var system = opts.system;
+  var user = opts.user;
+  var cfg = activeApiConfig();
   if (!cfg) return demoReply(system);
 
-  const res = await fetch("/api/chat", {
+  var res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       provider: cfg.provider,
       apiKey: cfg.apiKey,
       model: cfg.model,
-      system,
+      system: system,
       messages: [{ role: "user", content: user }],
     }),
   });
-  const data = await res.json().catch(() => ({}));
+  var data = {};
+  try {
+    data = await res.json();
+  } catch (e) {}
   if (!res.ok) throw new Error(data.error || "API error " + res.status);
   return data.text || "";
 }
 
-const DEMO_BANK = {
+var DEMO_BANK = {
   en: {
     for: [
-      "This position is practical and forward-looking. Benefits outweigh risks with proper safeguards.",
-      "Critics exaggerate edge cases. Real-world data shows positive outcomes for most people.",
-      "Refusing progress out of fear locks us into worse problems. Responsible adoption is rational.",
+      "This position is practical and forward-looking. Benefits outweigh risks when safeguards are in place.",
+      "Critics often exaggerate rare edge cases. Broader evidence points to net positive outcomes.",
+      "Avoiding change out of fear locks us into worse problems. Careful adoption is the rational path.",
     ],
     against: [
-      "This path underestimates long-term costs and concentrated power. We should slow down.",
-      "Evidence is mixed. Scaling without stronger protections invites harm to vulnerable groups.",
-      "Convenience is not wisdom. We can reject this framing and choose a safer alternative.",
+      "This path underestimates long-term costs and concentrated power. We should proceed more slowly.",
+      "The evidence is mixed at best. Scaling without stronger protections risks harming vulnerable groups.",
+      "Convenience is not the same as wisdom. A safer alternative deserves priority.",
     ],
   },
   vi: {
     for: [
-      "Quan điểm này thực tế. Lợi ích lớn hơn rủi ro nếu có biện pháp bảo vệ phù hợp.",
-      "Phê phán thường phóng đại ngoại lệ. Dữ liệu thực tế cho thấy kết quả tích cực với đa số.",
-      "Từ chối tiến bộ vì sợ hãi khiến vấn đề trầm trọng hơn. Áp dụng có trách nhiệm là hợp lý.",
+      "Quan diem nay thuc te va huong toi tuong lai. Loi ich lon hon rui ro neu co bien phap bao ve.",
+      "Phe phan thuong phong dai truong hop ngoai le. Du lieu thuc te cho thay ket qua tich cuc voi da so.",
+      "Tu choi tien bo vi so hai chi khien van de tram trong hon. Ap dung co trach nhiem la hop ly.",
     ],
     against: [
-      "Hướng đi này đánh giá thấp chi phí dài hạn. Chúng ta nên chậm lại.",
-      "Bằng chứng còn mâu thuẫn. Mở rộng khi thiếu bảo vệ sẽ gây hại nhóm yếu thế.",
-      "Tiện lợi không đồng nghĩa khôn ngoan. Nên chọn phương án an toàn hơn.",
+      "Huong di nay danh gia thap chi phi dai han va quyen luc tap trung. Chung ta nen cham lai.",
+      "Bang chung con mau thuan. Mo rong quy mo khi thieu bao ve se gay hai nhom yeu the.",
+      "Tien loi khong dong nghia voi khon ngoan. Nen chon phuong an an toan hon.",
     ],
   },
 };
 
 function demoReply(system) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const isFor = /FOR |ủng hộ|Advocate/i.test(system);
-      const lang = state.lang === "vi" ? "vi" : "en";
-      const bank = isFor ? DEMO_BANK[lang].for : DEMO_BANK[lang].against;
-      const i = Math.min(state.currentRound - 1, bank.length - 1);
-      const topicBit = state.topic ? " Regarding “" + state.topic + “”: " : " ";
-      resolve((isFor ? "✓" : "✗") + topicBit + bank[Math.max(0, i)]);
-    }, 600 + Math.random() * 500);
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      var isFor = /FOR |Advocate/i.test(system);
+      var lang = state.lang === "vi" ? "vi" : "en";
+      var bank = isFor ? DEMO_BANK[lang].for : DEMO_BANK[lang].against;
+      var idx = state.currentRound - 1;
+      if (idx < 0) idx = 0;
+      if (idx >= bank.length) idx = bank.length - 1;
+      var prefix = isFor ? "[FOR] " : "[AGAINST] ";
+      var topicPart = state.topic ? "On \"" + state.topic + "\": " : "";
+      resolve(prefix + topicPart + bank[idx]);
+    }, 500 + Math.random() * 400);
   });
 }
 
 function systemPrompt(side) {
-  const lang = state.lang === "vi" ? "Vietnamese" : "English";
-  const stance = side === "for" ? "FOR (in favor of the topic)" : "AGAINST (opposed to the topic)";
+  var lang = state.lang === "vi" ? "Vietnamese" : "English";
+  var stance =
+    side === "for"
+      ? "FOR (in favor of the topic)"
+      : "AGAINST (opposed to the topic)";
   return (
     "You are a sharp, concise debate AI arguing strictly " +
     stance +
     ". Reply in " +
     lang +
-    " only. Be persuasive, use 1–2 concrete reasons, stay under 120 words. Do not switch sides."
+    " only. Be persuasive, use 1-2 concrete reasons, stay under 120 words. Do not switch sides."
   );
 }
 
 function roundLabel(round, total) {
-  if (round === 1) return state.lang === "vi" ? "Mở đầu" : "Opening";
-  if (round === total) return state.lang === "vi" ? "Kết luận" : "Closing";
-  return state.lang === "vi" ? "Phản biện" : "Rebuttal";
+  if (round === 1) return state.lang === "vi" ? "Mo dau" : "Opening";
+  if (round === total) return state.lang === "vi" ? "Ket luan" : "Closing";
+  return state.lang === "vi" ? "Phan bien" : "Rebuttal";
 }
 
 function addBubble(side, text, round) {
-  const box = document.getElementById(side === "for" ? "messages-for" : "messages-against");
-  const div = document.createElement("div");
+  var box = document.getElementById(side === "for" ? "messages-for" : "messages-against");
+  if (!box) return;
+  var div = document.createElement("div");
   div.className = "bubble";
   div.innerHTML =
     '<span class="round-tag">' +
@@ -178,19 +193,26 @@ function escapeHtml(s) {
 }
 
 function setStatus(visible, text) {
-  const el = document.getElementById("debate-status");
+  var el = document.getElementById("debate-status");
+  if (!el) return;
   el.classList.toggle("hidden", !visible);
-  if (text) document.getElementById("status-text").textContent = text;
-  document.getElementById("debate-actions").classList.toggle("hidden", visible);
+  if (text) {
+    var st = document.getElementById("status-text");
+    if (st) st.textContent = text;
+  }
+  var actions = document.getElementById("debate-actions");
+  if (actions) actions.classList.toggle("hidden", visible);
 }
 
 async function runRound(round) {
   state.currentRound = round;
-  document.getElementById("round-num").textContent = String(round);
-  const forSide = state.swapped ? "against" : "for";
-  const againstSide = state.swapped ? "for" : "against";
+  var roundEl = document.getElementById("round-num");
+  if (roundEl) roundEl.textContent = String(round);
 
-  const userFor =
+  var forSide = state.swapped ? "against" : "for";
+  var againstSide = state.swapped ? "for" : "against";
+
+  var userFor =
     round === 1
       ? 'Topic: "' + state.topic + '". Give your opening argument.'
       : 'Topic: "' +
@@ -199,7 +221,7 @@ async function runRound(round) {
         (state.historyAgainst[state.historyAgainst.length - 1] || "") +
         '". Rebut and advance your case.';
 
-  const userAgainst =
+  var userAgainst =
     round === 1
       ? 'Topic: "' + state.topic + '". Give your opening argument against it.'
       : 'Topic: "' +
@@ -208,33 +230,39 @@ async function runRound(round) {
         (state.historyFor[state.historyFor.length - 1] || "") +
         '". Rebut and advance your case.';
 
-  setStatus(true, state.lang === "vi" ? "AI ủng hộ đang trình bày…" : "Advocate is speaking…");
+  setStatus(true, state.lang === "vi" ? "AI ung ho dang trinh bay..." : "Advocate is speaking...");
   try {
-    const textFor = await callAI({ system: systemPrompt(forSide), user: userFor });
+    var textFor = await callAI({ system: systemPrompt(forSide), user: userFor });
     state.historyFor.push(textFor);
     addBubble("for", textFor, round);
 
-    setStatus(true, state.lang === "vi" ? "AI phản đối đang trình bày…" : "Challenger is speaking…");
-    const textAgainst = await callAI({ system: systemPrompt(againstSide), user: userAgainst });
+    setStatus(true, state.lang === "vi" ? "AI phan doi dang trinh bay..." : "Challenger is speaking...");
+    var textAgainst = await callAI({ system: systemPrompt(againstSide), user: userAgainst });
     state.historyAgainst.push(textAgainst);
     addBubble("against", textAgainst, round);
 
     setStatus(false);
-    const nextBtn = document.getElementById("btn-next-round");
-    if (round >= state.rounds) nextBtn.classList.add("hidden");
-    else nextBtn.classList.remove("hidden");
+    var nextBtn = document.getElementById("btn-next-round");
+    if (nextBtn) {
+      if (round >= state.rounds) nextBtn.classList.add("hidden");
+      else nextBtn.classList.remove("hidden");
+    }
   } catch (err) {
     setStatus(true, "");
-    document.getElementById("status-text").textContent = "Error: " + (err.message || String(err));
-    document.getElementById("debate-actions").classList.remove("hidden");
-    document.getElementById("btn-next-round").classList.add("hidden");
+    var st = document.getElementById("status-text");
+    if (st) st.textContent = "Error: " + (err.message || String(err));
+    var actions = document.getElementById("debate-actions");
+    if (actions) actions.classList.remove("hidden");
+    var nextBtn2 = document.getElementById("btn-next-round");
+    if (nextBtn2) nextBtn2.classList.add("hidden");
   }
 }
 
 async function startDebate() {
-  const topic = document.getElementById("topic-input").value.trim();
+  var topicInput = document.getElementById("topic-input");
+  var topic = topicInput ? topicInput.value.trim() : "";
   if (!topic) {
-    document.getElementById("topic-input").focus();
+    if (topicInput) topicInput.focus();
     return;
   }
   state.topic = topic;
@@ -247,7 +275,8 @@ async function startDebate() {
   document.getElementById("round-total").textContent = String(state.rounds);
   document.getElementById("messages-for").innerHTML = "";
   document.getElementById("messages-against").innerHTML = "";
-  document.getElementById("btn-next-round").classList.remove("hidden");
+  var nextBtn = document.getElementById("btn-next-round");
+  if (nextBtn) nextBtn.classList.remove("hidden");
   showScreen("screen-debate");
   await runRound(1);
 }
@@ -255,91 +284,164 @@ async function startDebate() {
 function finishDebate() {
   document.getElementById("result-topic").textContent = state.topic;
   document.getElementById("vote-feedback").classList.add("hidden");
-  document.querySelectorAll(".vote-btn").forEach((b) => b.classList.remove("selected"));
+  document.querySelectorAll(".vote-btn").forEach(function (b) {
+    b.classList.remove("selected");
+  });
   showScreen("screen-result");
 }
 
 function openSettings() {
-  const s = state.settings;
-  document.getElementById("provider-select").value = s.provider || "demo";
-  document.getElementById("openai-key").value = s.openaiKey || "";
-  document.getElementById("gemini-key").value = s.geminiKey || "";
-  document.getElementById("openai-model").value = s.openaiModel || "gpt-4o-mini";
-  document.getElementById("gemini-model").value = s.geminiModel || "gemini-2.0-flash";
-  document.getElementById("modal-settings").classList.remove("hidden");
+  var s = state.settings;
+  var providerSelect = document.getElementById("provider-select");
+  var openaiKey = document.getElementById("openai-key");
+  var geminiKey = document.getElementById("gemini-key");
+  var openaiModel = document.getElementById("openai-model");
+  var geminiModel = document.getElementById("gemini-model");
+  if (providerSelect) providerSelect.value = s.provider || "demo";
+  if (openaiKey) openaiKey.value = s.openaiKey || "";
+  if (geminiKey) geminiKey.value = s.geminiKey || "";
+  if (openaiModel) openaiModel.value = s.openaiModel || "gpt-4o-mini";
+  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.0-flash";
+  var modal = document.getElementById("modal-settings");
+  if (modal) modal.classList.remove("hidden");
 }
 
 function applySettingsFromForm() {
+  var providerSelect = document.getElementById("provider-select");
+  var openaiKey = document.getElementById("openai-key");
+  var geminiKey = document.getElementById("gemini-key");
+  var openaiModel = document.getElementById("openai-model");
+  var geminiModel = document.getElementById("gemini-model");
   state.settings = {
-    provider: document.getElementById("provider-select").value,
-    openaiKey: document.getElementById("openai-key").value.trim(),
-    geminiKey: document.getElementById("gemini-key").value.trim(),
-    openaiModel: document.getElementById("openai-model").value,
-    geminiModel: document.getElementById("gemini-model").value,
+    provider: providerSelect ? providerSelect.value : "demo",
+    openaiKey: openaiKey ? openaiKey.value.trim() : "",
+    geminiKey: geminiKey ? geminiKey.value.trim() : "",
+    openaiModel: openaiModel ? openaiModel.value : "gpt-4o-mini",
+    geminiModel: geminiModel ? geminiModel.value : "gemini-2.0-flash",
   };
   saveSettings();
-  document.getElementById("modal-settings").classList.add("hidden");
+  var modal = document.getElementById("modal-settings");
+  if (modal) modal.classList.add("hidden");
 }
 
-document.getElementById("btn-settings").addEventListener("click", openSettings);
-document.getElementById("btn-close-settings").addEventListener("click", () => {
-  document.getElementById("modal-settings").classList.add("hidden");
-});
-document.getElementById("btn-save-settings").addEventListener("click", applySettingsFromForm);
-document.getElementById("btn-clear-key").addEventListener("click", () => {
-  document.getElementById("openai-key").value = "";
-  document.getElementById("gemini-key").value = "";
-  document.getElementById("provider-select").value = "demo";
-  state.settings = {
-    provider: "demo",
-    openaiKey: "",
-    geminiKey: "",
-    openaiModel: "gpt-4o-mini",
-    geminiModel: "gemini-2.0-flash",
-  };
-  saveSettings();
-});
+function bind() {
+  var btnSettings = document.getElementById("btn-settings");
+  if (btnSettings) btnSettings.addEventListener("click", openSettings);
 
-document.querySelectorAll(".chip").forEach((chip) => {
-  chip.addEventListener("click", () => {
-    document.getElementById("topic-input").value = chip.dataset.topic;
+  var btnClose = document.getElementById("btn-close-settings");
+  if (btnClose) {
+    btnClose.addEventListener("click", function () {
+      document.getElementById("modal-settings").classList.add("hidden");
+    });
+  }
+
+  var btnSave = document.getElementById("btn-save-settings");
+  if (btnSave) btnSave.addEventListener("click", applySettingsFromForm);
+
+  var btnClear = document.getElementById("btn-clear-key");
+  if (btnClear) {
+    btnClear.addEventListener("click", function () {
+      var ok = document.getElementById("openai-key");
+      var gk = document.getElementById("gemini-key");
+      var ps = document.getElementById("provider-select");
+      if (ok) ok.value = "";
+      if (gk) gk.value = "";
+      if (ps) ps.value = "demo";
+      state.settings = {
+        provider: "demo",
+        openaiKey: "",
+        geminiKey: "",
+        openaiModel: "gpt-4o-mini",
+        geminiModel: "gemini-2.0-flash",
+      };
+      saveSettings();
+    });
+  }
+
+  document.querySelectorAll(".chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      document.getElementById("topic-input").value = chip.getAttribute("data-topic") || "";
+    });
   });
-});
 
-document.getElementById("btn-start").addEventListener("click", startDebate);
-document.getElementById("btn-new").addEventListener("click", () => showScreen("screen-setup"));
-document.getElementById("btn-next-round").addEventListener("click", () => {
-  if (state.currentRound < state.rounds) runRound(state.currentRound + 1);
-});
-document.getElementById("btn-finish").addEventListener("click", finishDebate);
+  var btnStart = document.getElementById("btn-start");
+  if (btnStart) btnStart.addEventListener("click", startDebate);
 
-document.getElementById("vote-for").addEventListener("click", () => {
-  document.querySelectorAll(".vote-btn").forEach((b) => b.classList.remove("selected"));
-  document.getElementById("vote-for").classList.add("selected");
-  const fb = document.getElementById("vote-feedback");
-  fb.textContent = state.lang === "vi" ? "Bạn chọn bên ỦNG HỘ." : "You voted FOR.";
-  fb.classList.remove("hidden");
-});
-document.getElementById("vote-against").addEventListener("click", () => {
-  document.querySelectorAll(".vote-btn").forEach((b) => b.classList.remove("selected"));
-  document.getElementById("vote-against").classList.add("selected");
-  const fb = document.getElementById("vote-feedback");
-  fb.textContent = state.lang === "vi" ? "Bạn chọn bên PHẢN ĐỐI." : "You voted AGAINST.";
-  fb.classList.remove("hidden");
-});
+  var btnNew = document.getElementById("btn-new");
+  if (btnNew) {
+    btnNew.addEventListener("click", function () {
+      showScreen("screen-setup");
+    });
+  }
 
-document.getElementById("btn-again").addEventListener("click", () => {
-  state.swapped = false;
-  showScreen("screen-setup");
-});
-document.getElementById("btn-swap").addEventListener("click", async () => {
-  state.swapped = !state.swapped;
-  state.historyFor = [];
-  state.historyAgainst = [];
-  document.getElementById("messages-for").innerHTML = "";
-  document.getElementById("messages-against").innerHTML = "";
-  showScreen("screen-debate");
-  await runRound(1);
-});
+  var btnNext = document.getElementById("btn-next-round");
+  if (btnNext) {
+    btnNext.addEventListener("click", function () {
+      if (state.currentRound < state.rounds) runRound(state.currentRound + 1);
+    });
+  }
 
-updateProviderBadge();
+  var btnFinish = document.getElementById("btn-finish");
+  if (btnFinish) btnFinish.addEventListener("click", finishDebate);
+
+  var voteFor = document.getElementById("vote-for");
+  if (voteFor) {
+    voteFor.addEventListener("click", function () {
+      document.querySelectorAll(".vote-btn").forEach(function (b) {
+        b.classList.remove("selected");
+      });
+      voteFor.classList.add("selected");
+      var fb = document.getElementById("vote-feedback");
+      if (fb) {
+        fb.textContent = state.lang === "vi" ? "Ban chon ben UNG HO." : "You voted FOR.";
+        fb.classList.remove("hidden");
+      }
+    });
+  }
+
+  var voteAgainst = document.getElementById("vote-against");
+  if (voteAgainst) {
+    voteAgainst.addEventListener("click", function () {
+      document.querySelectorAll(".vote-btn").forEach(function (b) {
+        b.classList.remove("selected");
+      });
+      voteAgainst.classList.add("selected");
+      var fb = document.getElementById("vote-feedback");
+      if (fb) {
+        fb.textContent = state.lang === "vi" ? "Ban chon ben PHAN DOI." : "You voted AGAINST.";
+        fb.classList.remove("hidden");
+      }
+    });
+  }
+
+  var btnAgain = document.getElementById("btn-again");
+  if (btnAgain) {
+    btnAgain.addEventListener("click", function () {
+      state.swapped = false;
+      showScreen("screen-setup");
+    });
+  }
+
+  var btnSwap = document.getElementById("btn-swap");
+  if (btnSwap) {
+    btnSwap.addEventListener("click", async function () {
+      state.swapped = !state.swapped;
+      state.historyFor = [];
+      state.historyAgainst = [];
+      document.getElementById("messages-for").innerHTML = "";
+      document.getElementById("messages-against").innerHTML = "";
+      showScreen("screen-debate");
+      await runRound(1);
+    });
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () {
+    bind();
+    updateProviderBadge();
+  });
+} else {
+  bind();
+  updateProviderBadge();
+}
