@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debate Arena – Two AIs, Two Sides</title>
+  <meta name="description" content="Watch two AIs debate any topic — one for, one against. Connect your OpenAI or Gemini API key." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-mark">⚔️</span>
+        <span class="logo-text">Debate Arena</span>
+      </div>
+      <div class="header-actions">
+        <span id="provider-badge" class="provider-badge demo">Demo mode</span>
+        <button type="button" class="btn-icon" id="btn-settings" title="Settings">⚙️ Settings</button>
+      </div>
+    </header>
+    <main>
+      <section id="screen-setup" class="screen active">
+        <div class="hero">
+          <h1>Two AIs. <span class="grad">Two sides.</span></h1>
+          <p class="subtitle">Enter a topic. One AI argues for it, the other argues against — then they clash.</p>
+        </div>
+        <div class="setup-card">
+          <label class="field-label" for="topic-input">Debate topic</label>
+          <textarea id="topic-input" rows="3" placeholder="e.g. Should students use AI to write essays?"></textarea>
+          <div class="suggestions">
+            <button type="button" class="chip" data-topic="Should students use AI to write essays?">AI &amp; essays</button>
+            <button type="button" class="chip" data-topic="Is remote work better than office work?">Remote work</button>
+            <button type="button" class="chip" data-topic="Should social media have age restrictions under 16?">Social media age</button>
+            <button type="button" class="chip" data-topic="Is nuclear energy essential for fighting climate change?">Nuclear energy</button>
+            <button type="button" class="chip" data-topic="Should homework be banned in schools?">Ban homework</button>
+          </div>
+          <div class="setup-row">
+            <div class="field">
+              <label class="field-label" for="rounds-select">Rounds</label>
+              <select id="rounds-select">
+                <option value="2">2 rounds</option>
+                <option value="3" selected>3 rounds</option>
+                <option value="4">4 rounds</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="lang-select">Language</label>
+              <select id="lang-select">
+                <option value="en" selected>English</option>
+                <option value="vi">Tiếng Việt</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-start">Start debate</button>
+        </div>
+      </section>
+      <section id="screen-debate" class="screen">
+        <div class="debate-top">
+          <button type="button" class="back-link" id="btn-new">← New topic</button>
+          <h2 id="debate-topic" class="debate-topic"></h2>
+          <div class="round-indicator">Round <span id="round-num">1</span> / <span id="round-total">3</span></div>
+        </div>
+        <div class="arena">
+          <div class="side side-for">
+            <div class="side-header">
+              <span class="side-badge for">FOR</span>
+              <span class="side-name">Advocate</span>
+            </div>
+            <div class="messages" id="messages-for"></div>
+          </div>
+          <div class="side side-against">
+            <div class="side-header">
+              <span class="side-badge against">AGAINST</span>
+              <span class="side-name">Challenger</span>
+            </div>
+            <div class="messages" id="messages-against"></div>
+          </div>
+        </div>
+        <div class="debate-status" id="debate-status">
+          <div class="spinner"></div>
+          <span id="status-text">Preparing opening statements…</span>
+        </div>
+        <div class="debate-actions hidden" id="debate-actions">
+          <button type="button" class="btn btn-primary" id="btn-next-round">Next round →</button>
+          <button type="button" class="btn btn-secondary" id="btn-finish">Finish &amp; vote</button>
+        </div>
+      </section>
+      <section id="screen-result" class="screen">
+        <div class="result-card">
+          <h2>Who was more persuasive?</h2>
+          <p class="result-topic" id="result-topic"></p>
+          <div class="vote-row">
+            <button type="button" class="vote-btn for" id="vote-for"><span class="vote-label">FOR</span><span class="vote-name">Advocate</span></button>
+            <button type="button" class="vote-btn against" id="vote-against"><span class="vote-label">AGAINST</span><span class="vote-name">Challenger</span></button>
+          </div>
+          <p id="vote-feedback" class="vote-feedback hidden"></p>
+          <div class="result-actions">
+            <button type="button" class="btn btn-primary" id="btn-again">Debate another topic</button>
+            <button type="button" class="btn btn-secondary" id="btn-swap">Swap sides &amp; replay</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <p>Arguments are generated by AI — verify important claims yourself.</p>
+      <p class="created-by">Created by phaus</p>
+    </footer>
+  </div>
+  <div class="modal-overlay hidden" id="modal-settings">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>API settings</h3>
+        <button type="button" class="btn-close" id="btn-close-settings">×</button>
+      </div>
+      <p class="modal-hint">Keys stay in your browser only. Sent only to the AI provider via our proxy — not stored on our servers.</p>
+      <label class="field-label" for="provider-select">Provider</label>
+      <select id="provider-select">
+        <option value="demo">Demo (no API key)</option>
+        <option value="openai">OpenAI</option>
+        <option value="gemini">Google Gemini</option>
+      </select>
+      <div id="key-block" class="key-block hidden">
+        <label class="field-label" for="api-key-input">API key</label>
+        <input type="password" id="api-key-input" placeholder="sk-… or AIza…" autocomplete="off" />
+        <p class="field-hint" id="key-hint"></p>
+      </div>
+      <div id="model-block" class="key-block hidden">
+        <label class="field-label" for="model-select">Model</label>
+        <select id="model-select"></select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btn-clear-key">Clear key</button>
+        <button type="button" class="btn btn-primary" id="btn-save-settings">Save</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
