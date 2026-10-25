@@ -14,26 +14,34 @@ const state = {
 function loadSettings() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (raw) return raw;
+    if (raw) {
+      var settings = Object.assign({ providerFor: raw.provider || "demo", providerAgainst: raw.provider || "demo" }, raw);
+      if (!settings.geminiModel || ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"].includes(settings.geminiModel)) settings.geminiModel = "gemini-2.5-flash";
+      return settings;
+    }
   } catch (e) {}
   try {
     const v1 = JSON.parse(localStorage.getItem("debate_arena_settings_v1"));
     if (v1) {
       return {
         provider: v1.provider || "demo",
+        providerFor: v1.provider || "demo",
+        providerAgainst: v1.provider || "demo",
         openaiKey: v1.provider === "openai" ? v1.apiKey || "" : "",
         geminiKey: v1.provider === "gemini" ? v1.apiKey || "" : "",
         openaiModel: v1.provider === "openai" ? v1.model || "gpt-4o-mini" : "gpt-4o-mini",
-        geminiModel: v1.provider === "gemini" ? v1.model || "gemini-2.0-flash" : "gemini-2.0-flash",
+        geminiModel: v1.provider === "gemini" ? v1.model || "gemini-2.5-flash" : "gemini-2.5-flash",
       };
     }
   } catch (e) {}
   return {
     provider: "demo",
+    providerFor: "demo",
+    providerAgainst: "demo",
     openaiKey: "",
     geminiKey: "",
     openaiModel: "gpt-4o-mini",
-    geminiModel: "gemini-2.0-flash",
+    geminiModel: "gemini-2.5-flash",
   };
 }
 
@@ -43,21 +51,14 @@ function saveSettings() {
 }
 
 function updateProviderBadge() {
-  const el = document.getElementById("provider-badge");
+  var el = document.getElementById("provider-badge");
   if (!el) return;
-  const p = state.settings.provider;
-  const hasOpenAI = !!state.settings.openaiKey;
-  const hasGemini = !!state.settings.geminiKey;
-  if (p === "openai" && hasOpenAI) {
-    el.textContent = "OpenAI";
-    el.className = "provider-badge live";
-  } else if (p === "gemini" && hasGemini) {
-    el.textContent = "Gemini";
-    el.className = "provider-badge live";
-  } else {
-    el.textContent = "Demo mode";
-    el.className = "provider-badge demo";
-  }
+  var s = state.settings;
+  var left = s.providerFor || s.provider || "demo";
+  var right = s.providerAgainst || s.provider || "demo";
+  var names = { openai: "OpenAI", gemini: "Gemini", demo: "Demo" };
+  el.textContent = names[left] + " vs " + names[right];
+  el.className = "provider-badge " + (left === "demo" && right === "demo" ? "demo" : "live");
 }
 
 function showScreen(id) {
@@ -68,38 +69,34 @@ function showScreen(id) {
   if (screen) screen.classList.add("active");
 }
 
-function activeApiConfig() {
+function activeApiConfig(side) {
   var s = state.settings;
-  if (s.provider === "openai" && s.openaiKey) {
+  var provider = side === "for" ? s.providerFor : s.providerAgainst;
+  provider = provider || s.provider || "demo";
+  if (provider === "openai") {
+    if (!s.openaiKey) throw new Error("Missing OpenAI API key. Open Settings to configure the " + side.toUpperCase() + " side.");
     return { provider: "openai", apiKey: s.openaiKey, model: s.openaiModel || "gpt-4o-mini" };
   }
-  if (s.provider === "gemini" && s.geminiKey) {
-    return { provider: "gemini", apiKey: s.geminiKey, model: s.geminiModel || "gemini-2.0-flash" };
+  if (provider === "gemini") {
+    if (!s.geminiKey) throw new Error("Missing Gemini API key. Open Settings to configure the " + side.toUpperCase() + " side.");
+    return { provider: "gemini", apiKey: s.geminiKey, model: s.geminiModel || "gemini-2.5-flash" };
   }
   return null;
 }
 
 async function callAI(opts) {
-  var system = opts.system;
-  var user = opts.user;
-  var cfg = activeApiConfig();
-  if (!cfg) return demoReply(system);
-
+  var cfg = activeApiConfig(opts.side);
+  if (!cfg) return demoReply(opts.system);
   var res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      provider: cfg.provider,
-      apiKey: cfg.apiKey,
-      model: cfg.model,
-      system: system,
-      messages: [{ role: "user", content: user }],
+      provider: cfg.provider, apiKey: cfg.apiKey, model: cfg.model,
+      system: opts.system, messages: [{ role: "user", content: opts.user }],
     }),
   });
   var data = {};
-  try {
-    data = await res.json();
-  } catch (e) {}
+  try { data = await res.json(); } catch (e) {}
   if (!res.ok) throw new Error(data.error || "API error " + res.status);
   return data.text || "";
 }
@@ -232,12 +229,12 @@ async function runRound(round) {
 
   setStatus(true, state.lang === "vi" ? "AI ung ho dang trinh bay..." : "Advocate is speaking...");
   try {
-    var textFor = await callAI({ system: systemPrompt(forSide), user: userFor });
+    var textFor = await callAI({ side: "for", system: systemPrompt(forSide), user: userFor });
     state.historyFor.push(textFor);
     addBubble("for", textFor, round);
 
     setStatus(true, state.lang === "vi" ? "AI phan doi dang trinh bay..." : "Challenger is speaking...");
-    var textAgainst = await callAI({ system: systemPrompt(againstSide), user: userAgainst });
+    var textAgainst = await callAI({ side: "against", system: systemPrompt(againstSide), user: userAgainst });
     state.historyAgainst.push(textAgainst);
     addBubble("against", textAgainst, round);
 
@@ -292,32 +289,37 @@ function finishDebate() {
 
 function openSettings() {
   var s = state.settings;
-  var providerSelect = document.getElementById("provider-select");
+  var providerFor = document.getElementById("provider-for");
+  var providerAgainst = document.getElementById("provider-against");
   var openaiKey = document.getElementById("openai-key");
   var geminiKey = document.getElementById("gemini-key");
   var openaiModel = document.getElementById("openai-model");
   var geminiModel = document.getElementById("gemini-model");
-  if (providerSelect) providerSelect.value = s.provider || "demo";
+  if (providerFor) providerFor.value = s.providerFor || s.provider || "demo";
+  if (providerAgainst) providerAgainst.value = s.providerAgainst || s.provider || "demo";
   if (openaiKey) openaiKey.value = s.openaiKey || "";
   if (geminiKey) geminiKey.value = s.geminiKey || "";
   if (openaiModel) openaiModel.value = s.openaiModel || "gpt-4o-mini";
-  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.0-flash";
+  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.5-flash";
   var modal = document.getElementById("modal-settings");
   if (modal) modal.classList.remove("hidden");
 }
 
 function applySettingsFromForm() {
-  var providerSelect = document.getElementById("provider-select");
+  var providerFor = document.getElementById("provider-for");
+  var providerAgainst = document.getElementById("provider-against");
   var openaiKey = document.getElementById("openai-key");
   var geminiKey = document.getElementById("gemini-key");
   var openaiModel = document.getElementById("openai-model");
   var geminiModel = document.getElementById("gemini-model");
   state.settings = {
-    provider: providerSelect ? providerSelect.value : "demo",
+    provider: providerFor ? providerFor.value : "demo",
+    providerFor: providerFor ? providerFor.value : "demo",
+    providerAgainst: providerAgainst ? providerAgainst.value : "demo",
     openaiKey: openaiKey ? openaiKey.value.trim() : "",
     geminiKey: geminiKey ? geminiKey.value.trim() : "",
     openaiModel: openaiModel ? openaiModel.value : "gpt-4o-mini",
-    geminiModel: geminiModel ? geminiModel.value : "gemini-2.0-flash",
+    geminiModel: geminiModel ? geminiModel.value.trim().replace(/^models\//, "") || "gemini-2.5-flash" : "gemini-2.5-flash",
   };
   saveSettings();
   var modal = document.getElementById("modal-settings");
@@ -325,6 +327,12 @@ function applySettingsFromForm() {
 }
 
 function bind() {
+  document.querySelectorAll("[data-gemini-model]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var field = document.getElementById("gemini-model");
+      if (field) field.value = button.getAttribute("data-gemini-model");
+    });
+  });
   var btnSettings = document.getElementById("btn-settings");
   if (btnSettings) btnSettings.addEventListener("click", openSettings);
 
@@ -343,16 +351,20 @@ function bind() {
     btnClear.addEventListener("click", function () {
       var ok = document.getElementById("openai-key");
       var gk = document.getElementById("gemini-key");
-      var ps = document.getElementById("provider-select");
+      var pf = document.getElementById("provider-for");
+      var pa = document.getElementById("provider-against");
       if (ok) ok.value = "";
       if (gk) gk.value = "";
-      if (ps) ps.value = "demo";
+      if (pf) pf.value = "demo";
+      if (pa) pa.value = "demo";
       state.settings = {
         provider: "demo",
+        providerFor: "demo",
+        providerAgainst: "demo",
         openaiKey: "",
         geminiKey: "",
         openaiModel: "gpt-4o-mini",
-        geminiModel: "gemini-2.0-flash",
+        geminiModel: "gemini-2.5-flash",
       };
       saveSettings();
     });
