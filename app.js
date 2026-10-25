@@ -336,7 +336,6 @@ function applySettingsFromForm() {
 }
 
 function bind() {
-  });
   var btnSettings = document.getElementById("btn-settings");
   if (btnSettings) btnSettings.addEventListener("click", openSettings);
 
