@@ -300,7 +300,16 @@ function openSettings() {
   if (openaiKey) openaiKey.value = s.openaiKey || "";
   if (geminiKey) geminiKey.value = s.geminiKey || "";
   if (openaiModel) openaiModel.value = s.openaiModel || "gpt-4o-mini";
-  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.5-flash";
+  if (geminiModel) {
+    var savedModel = s.geminiModel || "gemini-2.5-flash";
+    if (!Array.from(geminiModel.options).some(function (option) { return option.value === savedModel; })) {
+      var customOption = document.createElement("option");
+      customOption.value = savedModel;
+      customOption.textContent = savedModel + " (saved)";
+      geminiModel.appendChild(customOption);
+    }
+    geminiModel.value = savedModel;
+  }
   var modal = document.getElementById("modal-settings");
   if (modal) modal.classList.remove("hidden");
 }
@@ -327,11 +336,6 @@ function applySettingsFromForm() {
 }
 
 function bind() {
-  document.querySelectorAll("[data-gemini-model]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      var field = document.getElementById("gemini-model");
-      if (field) field.value = button.getAttribute("data-gemini-model");
-    });
   });
   var btnSettings = document.getElementById("btn-settings");
   if (btnSettings) btnSettings.addEventListener("click", openSettings);
