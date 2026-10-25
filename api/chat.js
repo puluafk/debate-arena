@@ -87,7 +87,7 @@ async function callOpenAI(apiKey, model, system, messages) {
 }
 
 async function callGemini(apiKey, model, system, messages) {
-  var modelId = model || "gemini-2.0-flash";
+  var modelId = String(model || "gemini-2.5-flash").replace(/^models\//, "");
   var url =
     "https://generativelanguage.googleapis.com/v1beta/models/" +
     modelId +
