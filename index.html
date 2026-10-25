@@ -117,14 +117,26 @@
         <h3>API settings — OpenAI &amp; Gemini</h3>
         <button type="button" class="btn-close" id="btn-close-settings">×</button>
       </div>
-      <p class="modal-hint">Save both keys. Switch active provider anytime. Keys stay in your browser only.</p>
+      <p class="modal-hint">Choose a separate provider for each side. Save both keys to use OpenAI vs Gemini. Keys stay in your browser.</p>
 
-      <label class="field-label" for="provider-select">Active provider</label>
-      <select id="provider-select">
-        <option value="demo">Demo (no API key)</option>
-        <option value="openai">OpenAI (ChatGPT)</option>
-        <option value="gemini">Google Gemini</option>
-      </select>
+      <div class="setup-row">
+        <div class="field">
+          <label class="field-label" for="provider-for">FOR — Advocate AI</label>
+          <select id="provider-for">
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="demo">Demo (no API key)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="provider-against">AGAINST — Challenger AI</label>
+          <select id="provider-against">
+            <option value="gemini">Google Gemini</option>
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="demo">Demo (no API key)</option>
+          </select>
+        </div>
+      </div>
 
       <div class="key-section">
         <h4 class="key-title">OpenAI</h4>
