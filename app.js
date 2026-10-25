@@ -14,7 +14,11 @@ const state = {
 function loadSettings() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (raw) return Object.assign({ providerFor: raw.provider || "demo", providerAgainst: raw.provider || "demo" }, raw);
+    if (raw) {
+      var settings = Object.assign({ providerFor: raw.provider || "demo", providerAgainst: raw.provider || "demo" }, raw);
+      if (!settings.geminiModel || ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"].includes(settings.geminiModel)) settings.geminiModel = "gemini-2.5-flash";
+      return settings;
+    }
   } catch (e) {}
   try {
     const v1 = JSON.parse(localStorage.getItem("debate_arena_settings_v1"));
@@ -26,7 +30,7 @@ function loadSettings() {
         openaiKey: v1.provider === "openai" ? v1.apiKey || "" : "",
         geminiKey: v1.provider === "gemini" ? v1.apiKey || "" : "",
         openaiModel: v1.provider === "openai" ? v1.model || "gpt-4o-mini" : "gpt-4o-mini",
-        geminiModel: v1.provider === "gemini" ? v1.model || "gemini-2.0-flash" : "gemini-2.0-flash",
+        geminiModel: v1.provider === "gemini" ? v1.model || "gemini-2.5-flash" : "gemini-2.5-flash",
       };
     }
   } catch (e) {}
@@ -37,7 +41,7 @@ function loadSettings() {
     openaiKey: "",
     geminiKey: "",
     openaiModel: "gpt-4o-mini",
-    geminiModel: "gemini-2.0-flash",
+    geminiModel: "gemini-2.5-flash",
   };
 }
 
@@ -75,7 +79,7 @@ function activeApiConfig(side) {
   }
   if (provider === "gemini") {
     if (!s.geminiKey) throw new Error("Missing Gemini API key. Open Settings to configure the " + side.toUpperCase() + " side.");
-    return { provider: "gemini", apiKey: s.geminiKey, model: s.geminiModel || "gemini-2.0-flash" };
+    return { provider: "gemini", apiKey: s.geminiKey, model: s.geminiModel || "gemini-2.5-flash" };
   }
   return null;
 }
@@ -296,7 +300,7 @@ function openSettings() {
   if (openaiKey) openaiKey.value = s.openaiKey || "";
   if (geminiKey) geminiKey.value = s.geminiKey || "";
   if (openaiModel) openaiModel.value = s.openaiModel || "gpt-4o-mini";
-  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.0-flash";
+  if (geminiModel) geminiModel.value = s.geminiModel || "gemini-2.5-flash";
   var modal = document.getElementById("modal-settings");
   if (modal) modal.classList.remove("hidden");
 }
@@ -315,7 +319,7 @@ function applySettingsFromForm() {
     openaiKey: openaiKey ? openaiKey.value.trim() : "",
     geminiKey: geminiKey ? geminiKey.value.trim() : "",
     openaiModel: openaiModel ? openaiModel.value : "gpt-4o-mini",
-    geminiModel: geminiModel ? geminiModel.value : "gemini-2.0-flash",
+    geminiModel: geminiModel ? geminiModel.value.trim().replace(/^models\//, "") || "gemini-2.5-flash" : "gemini-2.5-flash",
   };
   saveSettings();
   var modal = document.getElementById("modal-settings");
@@ -354,7 +358,7 @@ function bind() {
         openaiKey: "",
         geminiKey: "",
         openaiModel: "gpt-4o-mini",
-        geminiModel: "gemini-2.0-flash",
+        geminiModel: "gemini-2.5-flash",
       };
       saveSettings();
     });
