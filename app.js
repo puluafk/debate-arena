@@ -327,6 +327,12 @@ function applySettingsFromForm() {
 }
 
 function bind() {
+  document.querySelectorAll("[data-gemini-model]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var field = document.getElementById("gemini-model");
+      if (field) field.value = button.getAttribute("data-gemini-model");
+    });
+  });
   var btnSettings = document.getElementById("btn-settings");
   if (btnSettings) btnSettings.addEventListener("click", openSettings);
 
