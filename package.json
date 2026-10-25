@@ -1,0 +1,6 @@
+{
+  "name": "debate-arena",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two AIs debate any topic — OpenAI & Gemini supported"
+}
