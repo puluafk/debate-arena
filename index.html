@@ -157,8 +157,11 @@
         <label class="field-label" for="gemini-key">API key</label>
         <input type="password" id="gemini-key" placeholder="AIza…" autocomplete="off" />
         <label class="field-label" for="gemini-model">Model</label>
-        <input type="text" id="gemini-model" value="gemini-2.5-flash" placeholder="e.g. gemini-2.5-flash" autocomplete="off" spellcheck="false" />
-        <p class="field-hint">Quick models: <button type="button" class="chip" data-gemini-model="gemini-2.5-flash">Gemini 2.5 Flash</button> <button type="button" class="chip" data-gemini-model="gemini-3.8-flash">Gemini 3.8 Flash</button></p><p class="field-hint">Use a model ID supported by your API key. Gemini 3.8 Flash is an optional ID based on the API error you received; availability is not independently verified.</p>
+        <select id="gemini-model">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+        </select>
+        <p class="field-hint">Select a Gemini model supported by your API key.</p>
       </div>
 
       <div class="modal-actions">
