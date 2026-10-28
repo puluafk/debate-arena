@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Debate Arena Delta – Two AIs, Two Sides</title>
-  <meta name="description" content="Watch two AIs debate any topic — OpenAI, Gemini & Claude with your own keys." />
+  <meta name="description" content="Watch two AIs debate any topic — OpenAI & Gemini with your own keys." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,7 +18,7 @@
         <span class="logo-text">Debate Arena Delta</span>
       </div>
       <div class="header-actions">
-        <span id="provider-badge" class="provider-badge demo">Demo vs Demo</span>
+        <span id="provider-badge" class="provider-badge demo">Demo mode</span>
         <button type="button" class="btn-icon" id="btn-settings" title="Settings">⚙️ Settings</button>
       </div>
     </header>
@@ -26,35 +26,8 @@
       <section id="screen-setup" class="screen active">
         <div class="hero">
           <h1>Two AIs. <span class="grad">Two sides.</span></h1>
-          <p class="subtitle">Pick who debates whom, then enter a topic.</p>
+          <p class="subtitle">Enter a topic. One AI argues for it, the other against. Use OpenAI or Gemini with your own keys.</p>
         </div>
-
-        <div class="matchup-card" id="matchup-card">
-          <div class="matchup-title">Who debates whom?</div>
-          <div class="matchup-grid">
-            <div class="matchup-side">
-              <div class="matchup-label for-label">FOR</div>
-              <div class="ai-pick" data-side="for" role="group" aria-label="FOR AI">
-                <button type="button" class="ai-btn" data-provider="demo">Demo</button>
-                <button type="button" class="ai-btn" data-provider="openai">OpenAI</button>
-                <button type="button" class="ai-btn" data-provider="gemini">Gemini</button>
-                <button type="button" class="ai-btn" data-provider="claude">Claude</button>
-              </div>
-            </div>
-            <div class="matchup-vs">VS</div>
-            <div class="matchup-side">
-              <div class="matchup-label against-label">AGAINST</div>
-              <div class="ai-pick" data-side="against" role="group" aria-label="AGAINST AI">
-                <button type="button" class="ai-btn" data-provider="demo">Demo</button>
-                <button type="button" class="ai-btn" data-provider="openai">OpenAI</button>
-                <button type="button" class="ai-btn" data-provider="gemini">Gemini</button>
-                <button type="button" class="ai-btn" data-provider="claude">Claude</button>
-              </div>
-            </div>
-          </div>
-          <p class="matchup-hint" id="matchup-hint">Keys are set in Settings if you pick OpenAI, Gemini, or Claude.</p>
-        </div>
-
         <div class="setup-card">
           <label class="field-label" for="topic-input">Debate topic</label>
           <textarea id="topic-input" rows="3" placeholder="e.g. Should students use AI to write essays?"></textarea>
@@ -85,25 +58,24 @@
           <button type="button" class="btn btn-primary btn-lg" id="btn-start">Start debate</button>
         </div>
       </section>
-
       <section id="screen-debate" class="screen">
         <div class="debate-top">
           <button type="button" class="back-link" id="btn-new">← New topic</button>
           <h2 id="debate-topic" class="debate-topic"></h2>
-          <div class="round-indicator">Round <span id="round-num">1</span> / <span id="round-total">3</span> · <span id="matchup-live">Demo vs Demo</span></div>
+          <div class="round-indicator">Round <span id="round-num">1</span> / <span id="round-total">3</span></div>
         </div>
         <div class="arena">
           <div class="side side-for">
             <div class="side-header">
               <span class="side-badge for">FOR</span>
-              <span class="side-name" id="name-for">Advocate</span>
+              <span class="side-name">Advocate</span>
             </div>
             <div class="messages" id="messages-for"></div>
           </div>
           <div class="side side-against">
             <div class="side-header">
               <span class="side-badge against">AGAINST</span>
-              <span class="side-name" id="name-against">Challenger</span>
+              <span class="side-name">Challenger</span>
             </div>
             <div class="messages" id="messages-against"></div>
           </div>
@@ -117,14 +89,13 @@
           <button type="button" class="btn btn-secondary" id="btn-finish">Finish & vote</button>
         </div>
       </section>
-
       <section id="screen-result" class="screen">
         <div class="result-card">
           <h2>Who was more persuasive?</h2>
           <p class="result-topic" id="result-topic"></p>
           <div class="vote-row">
-            <button type="button" class="vote-btn for" id="vote-for"><span class="vote-label">FOR</span><span class="vote-name" id="vote-name-for">Advocate</span></button>
-            <button type="button" class="vote-btn against" id="vote-against"><span class="vote-label">AGAINST</span><span class="vote-name" id="vote-name-against">Challenger</span></button>
+            <button type="button" class="vote-btn for" id="vote-for"><span class="vote-label">FOR</span><span class="vote-name">Advocate</span></button>
+            <button type="button" class="vote-btn against" id="vote-against"><span class="vote-label">AGAINST</span><span class="vote-name">Challenger</span></button>
           </div>
           <p id="vote-feedback" class="vote-feedback hidden"></p>
           <div class="result-actions">
@@ -143,50 +114,58 @@
   <div class="modal-overlay hidden" id="modal-settings">
     <div class="modal modal-wide">
       <div class="modal-header">
-        <h3>API keys & models</h3>
-        <button type="button" class="btn-close" id="btn-close-settings" aria-label="Close">×</button>
+        <h3>API settings — OpenAI & Gemini</h3>
+        <button type="button" class="btn-close" id="btn-close-settings">×</button>
       </div>
-      <p class="modal-hint">Pick the matchup on the home screen. Scroll inside to see OpenAI, Gemini, and Claude keys.</p>
-      <div class="modal-body">
-        <div class="key-section">
-          <h4 class="key-title">OpenAI</h4>
-          <p class="field-hint"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get key → platform.openai.com</a></p>
-          <label class="field-label" for="openai-key">API key</label>
-          <input type="password" id="openai-key" placeholder="sk-proj-…" autocomplete="off" />
-          <label class="field-label" for="openai-model">Model</label>
-          <select id="openai-model">
-            <option value="gpt-4o-mini">GPT-4o mini</option>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+      <p class="modal-hint">Choose a separate provider for each side. Save both keys to use OpenAI vs Gemini. Keys stay in your browser.</p>
+
+      <div class="setup-row">
+        <div class="field">
+          <label class="field-label" for="provider-for">FOR — Advocate AI</label>
+          <select id="provider-for">
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="demo">Demo (no API key)</option>
           </select>
         </div>
-        <div class="key-section">
-          <h4 class="key-title">Google Gemini</h4>
-          <p class="field-hint"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get key → aistudio.google.com</a></p>
-          <label class="field-label" for="gemini-key">API key</label>
-          <input type="password" id="gemini-key" placeholder="AIza…" autocomplete="off" />
-          <label class="field-label" for="gemini-model">Model</label>
-          <select id="gemini-model">
-            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-            <option value="gemini-flash-latest">gemini-flash-latest</option>
-          </select>
-        </div>
-        <div class="key-section">
-          <h4 class="key-title">Claude (Anthropic)</h4>
-          <p class="field-hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get key → console.anthropic.com</a></p>
-          <label class="field-label" for="claude-key">API key</label>
-          <input type="password" id="claude-key" placeholder="sk-ant-…" autocomplete="off" />
-          <label class="field-label" for="claude-model">Model</label>
-          <select id="claude-model">
-            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-            <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
-            <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+        <div class="field">
+          <label class="field-label" for="provider-against">AGAINST — Challenger AI</label>
+          <select id="provider-against">
+            <option value="gemini">Google Gemini</option>
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="demo">Demo (no API key)</option>
           </select>
         </div>
       </div>
+
+      <div class="key-section">
+        <h4 class="key-title">OpenAI</h4>
+        <p class="field-hint"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get key → platform.openai.com/api-keys</a></p>
+        <label class="field-label" for="openai-key">API key</label>
+        <input type="password" id="openai-key" placeholder="sk-proj-…" autocomplete="off" />
+        <label class="field-label" for="openai-model">Model</label>
+        <select id="openai-model">
+          <option value="gpt-4o-mini">GPT-4o mini (fast)</option>
+          <option value="gpt-4o">GPT-4o</option>
+          <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+        </select>
+      </div>
+
+      <div class="key-section">
+        <h4 class="key-title">Google Gemini</h4>
+        <p class="field-hint"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get key → aistudio.google.com/apikey</a></p>
+        <label class="field-label" for="gemini-key">API key</label>
+        <input type="password" id="gemini-key" placeholder="AIza…" autocomplete="off" />
+        <label class="field-label" for="gemini-model">Model</label>
+        <select id="gemini-model">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+        </select>
+        <p class="field-hint">Select a Gemini model supported by your API key.</p>
+      </div>
+
       <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="btn-clear-key">Clear keys</button>
+        <button type="button" class="btn btn-secondary" id="btn-clear-key">Clear all keys</button>
         <button type="button" class="btn btn-primary" id="btn-save-settings">Save</button>
       </div>
     </div>
