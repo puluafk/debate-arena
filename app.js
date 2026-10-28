@@ -91,12 +91,15 @@ function demoReply(system) {
     setTimeout(function () {
       var side = /FOR |Advocate/i.test(system) ? "for" : "against";
       var lang = state.lang === "vi" ? "vi" : "en";
-      var debate = (typeof DEMO_DEBATES !== "undefined") ? DEMO_DEBATES[state.topic.trim()] : null;
-      var index = Math.max(0, Math.min(state.currentRound - 1, 2));
-      if (debate && debate[lang] && debate[lang][side]) return resolve(debate[lang][side][index] || debate[lang][side][0]);
       var generic = {
-        en: { for: "On this topic, benefits can outweigh risks with clear safeguards.", against: "On this topic, costs and uncertainty mean we should slow down." },
-        vi: { for: "Ve chu de nay, loi ich co the lon hon rui ro neu co bao ve ro.", against: "Ve chu de nay, chi phi va bat dinh nen can can than." }
+        en: {
+          for: "Claim: The affirmative case is stronger when benefits are concrete and risks are manageable. Reason 1: Clear rules can capture gains without ignoring harm. Reason 2: Rejecting the idea entirely discards useful options. Conclusion: Support with conditions, not a blank check.",
+          against: "Claim: The negative case is stronger when costs and uncertainty are material. Reason 1: Weak evidence means the burden of proof is not met. Reason 2: Safer alternatives exist. Conclusion: Oppose or delay until safeguards improve."
+        },
+        vi: {
+          for: "Lap luan: Ben ung ho manh hon khi loi ich ro va rui ro kiem soat duoc. Ly do 1: Quy tac giup can bang. Ly do 2: Bac bo toan bo se mat lua chon huu ich. Ket luan: Ung ho co dieu kien.",
+          against: "Lap luan: Ben phan doi manh hon khi chi phi va bat dinh ro. Ly do 1: Bang chung yeu. Ly do 2: Con phuong an an toan hon. Ket luan: Phan doi hoac hoan."
+        }
       };
       resolve(generic[lang][side]);
     }, 600);
