@@ -59,9 +59,9 @@
           <label class="field-label" for="topic-input">Debate topic</label>
           <textarea id="topic-input" rows="3" placeholder="e.g. Should students use AI to write essays?"></textarea>
           <div class="suggestions">
-            <button type="button" class="chip" data-topic="Should students use AI to write essays?">AI &amp; essays</button>
+            <button type="button" class="chip" data-topic="Should students use AI to write essays?">AI & essays</button>
             <button type="button" class="chip" data-topic="Is remote work better than office work?">Remote work</button>
-            <button type="button" class="chip" data-topic="Should social media have age restrictions under 16?">Social media age</button>
+            <button type="button" class="chip" data-topic="Should social media have age restrictions under 16?">Ban homework</button>
             <button type="button" class="chip" data-topic="Is nuclear energy essential for fighting climate change?">Nuclear energy</button>
             <button type="button" class="chip" data-topic="Should homework be banned in schools?">Ban homework</button>
           </div>
@@ -114,7 +114,7 @@
         </div>
         <div class="debate-actions hidden" id="debate-actions">
           <button type="button" class="btn btn-primary" id="btn-next-round">Next round →</button>
-          <button type="button" class="btn btn-secondary" id="btn-finish">Finish &amp; vote</button>
+          <button type="button" class="btn btn-secondary" id="btn-finish">Finish & vote</button>
         </div>
       </section>
 
@@ -129,7 +129,7 @@
           <p id="vote-feedback" class="vote-feedback hidden"></p>
           <div class="result-actions">
             <button type="button" class="btn btn-primary" id="btn-again">Debate another topic</button>
-            <button type="button" class="btn btn-secondary" id="btn-swap">Swap sides &amp; replay</button>
+            <button type="button" class="btn btn-secondary" id="btn-swap">Swap sides & replay</button>
           </div>
         </div>
       </section>
@@ -143,46 +143,47 @@
   <div class="modal-overlay hidden" id="modal-settings">
     <div class="modal modal-wide">
       <div class="modal-header">
-        <h3>API keys &amp; models</h3>
-        <button type="button" class="btn-close" id="btn-close-settings">×</button>
+        <h3>API keys & models</h3>
+        <button type="button" class="btn-close" id="btn-close-settings" aria-label="Close">×</button>
       </div>
-      <p class="modal-hint">Pick the matchup on the home screen. Add keys here for OpenAI, Gemini, or Claude.</p>
-
-      <div class="key-section">
-        <h4 class="key-title">OpenAI</h4>
-        <p class="field-hint"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get key</a></p>
-        <label class="field-label" for="openai-key">API key</label>
-        <input type="password" id="openai-key" placeholder="sk-proj-…" autocomplete="off" />
-        <label class="field-label" for="openai-model">Model</label>
-        <select id="openai-model">
-          <option value="gpt-4o-mini">GPT-4o mini</option>
-          <option value="gpt-4o">GPT-4o</option>
-          <option value="gpt-4.1-mini">GPT-4.1 mini</option>
-        </select>
-      </div>
-      <div class="key-section">
-        <h4 class="key-title">Google Gemini</h4>
-        <p class="field-hint"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get key</a></p>
-        <label class="field-label" for="gemini-key">API key</label>
-        <input type="password" id="gemini-key" placeholder="AIza…" autocomplete="off" />
-        <label class="field-label" for="gemini-model">Model</label>
-        <select id="gemini-model">
-          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-          <option value="gemini-flash-latest">gemini-flash-latest</option>
-        </select>
-      </div>
-      <div class="key-section">
-        <h4 class="key-title">Claude</h4>
-        <p class="field-hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get key</a></p>
-        <label class="field-label" for="claude-key">API key</label>
-        <input type="password" id="claude-key" placeholder="sk-ant-…" autocomplete="off" />
-        <label class="field-label" for="claude-model">Model</label>
-        <select id="claude-model">
-          <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-          <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
-          <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
-        </select>
+      <p class="modal-hint">Pick the matchup on the home screen. Scroll to add keys for OpenAI, Gemini, and Claude.</p>
+      <div class="modal-body">
+        <div class="key-section">
+          <h4 class="key-title">OpenAI</h4>
+          <p class="field-hint"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get key → platform.openai.com</a></p>
+          <label class="field-label" for="openai-key">API key</label>
+          <input type="password" id="openai-key" placeholder="sk-proj-…" autocomplete="off" />
+          <label class="field-label" for="openai-model">Model</label>
+          <select id="openai-model">
+            <option value="gpt-4o-mini">GPT-4o mini</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4.1-mini">GPT-4.1 mini</option>
+          </select>
+        </div>
+        <div class="key-section">
+          <h4 class="key-title">Google Gemini</h4>
+          <p class="field-hint"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get key → aistudio.google.com</a></p>
+          <label class="field-label" for="gemini-key">API key</label>
+          <input type="password" id="gemini-key" placeholder="AIza…" autocomplete="off" />
+          <label class="field-label" for="gemini-model">Model</label>
+          <select id="gemini-model">
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            <option value="gemini-flash-latest">gemini-flash-latest</option>
+          </select>
+        </div>
+        <div class="key-section">
+          <h4 class="key-title">Claude (Anthropic)</h4>
+          <p class="field-hint"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get key → console.anthropic.com</a></p>
+          <label class="field-label" for="claude-key">API key</label>
+          <input type="password" id="claude-key" placeholder="sk-ant-…" autocomplete="off" />
+          <label class="field-label" for="claude-model">Model</label>
+          <select id="claude-model">
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+            <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
+            <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet</option>
+          </select>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="btn-clear-key">Clear keys</button>
