@@ -55,8 +55,8 @@ module.exports = async function handler(req, res) {
 async function callOpenAI(apiKey, model, system, messages) {
   var body = {
     model: model || "gpt-4o-mini",
-    temperature: 0.8,
-    max_tokens: 400,
+    temperature: 0.7,
+    max_tokens: 700,
     messages: [{ role: "system", content: system || "You are a debate assistant." }].concat(
       (messages || []).map(function (m) {
         return {
@@ -121,7 +121,7 @@ async function callGemini(apiKey, model, system, messages) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: contents,
-      generationConfig: { temperature: 0.8, maxOutputTokens: 400 },
+      generationConfig: { temperature: 0.7, maxOutputTokens: 700 },
     }),
   });
 
@@ -146,8 +146,8 @@ async function callGemini(apiKey, model, system, messages) {
 async function callClaude(apiKey, model, system, messages) {
   var body = {
     model: model || "claude-sonnet-4-20250514",
-    max_tokens: 400,
-    temperature: 0.8,
+    max_tokens: 700,
+    temperature: 0.7,
     system: system || "You are a debate assistant.",
     messages: (messages || []).map(function (m) {
       return {
