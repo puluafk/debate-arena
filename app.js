@@ -119,26 +119,26 @@ var DEMO_DEBATES = {
   "Should students use AI to write essays?": {
     en: {
       for: [
-        "AI helps students brainstorm and organize essays.",
-        "Students should verify AI suggestions and explain their own reasoning.",
-        "Teach responsible AI use and assess the writing process.",
+        "Claim: Students should be allowed to use AI for essays under clear rules. Reason 1: AI can support brainstorming and structure without replacing the student's final argument. Reason 2: Banning tools students already use pushes misuse underground; guided use teaches verification and citation. Conclusion: Assess process and original reasoning, not a total ban.",
+        "Rebuttal: The risk of shallow work is real, but it comes from weak assessment design, not from the tool itself. If teachers require outlines, source checks, and oral defense, AI becomes a drafting aid rather than a substitute. Evidence from classroom practice shows process-based grading reduces pure copy-paste. Therefore restrictions should target cheating methods, not learning assistance.",
+        "Closing: A strict ban is hard to enforce and ignores workplace reality where AI is common. A tighter policy—disclose AI use, require student-owned thesis and evidence, and grade reasoning—protects learning while keeping useful support. That is the more rigorous and practical position.",
       ],
       against: [
-        "AI-generated essays can hide gaps in students' understanding.",
-        "Even with disclosure, teachers may struggle to assess genuine authorship.",
-        "Final essays must reflect each student's independent thinking.",
+        "Claim: Students should not use AI to write essays as a default school practice. Reason 1: Essay writing trains original analysis; outsourcing sentences weakens that skill. Reason 2: Teachers cannot reliably separate assisted text from student understanding, so grades lose validity. Conclusion: Core writing work should remain human-authored.",
+        "Rebuttal: Calling AI a neutral 'helper' understates how easily it produces complete paragraphs that students may not fully grasp. Disclosure rules help, but they do not restore the cognitive work of constructing an argument. If the educational goal is independent thinking, allowing AI drafting systematically undermines the assessment signal.",
+        "Closing: Schools can teach AI literacy in separate exercises without making essay authorship dependent on models. For graded essays, the stricter standard—student-generated prose and reasoning—better protects learning outcomes and fairness.",
       ],
     },
     vi: {
       for: [
-        "AI giup hoc sinh tim y tuong va sap xep bai luan.",
-        "Hoc sinh nen kiem chung goi y cua AI va tu giai thich lap luan.",
-        "Nen day su dung AI co trach nhiem va danh gia qua trinh viet.",
+        "Lap luan: Hoc sinh nen duoc dung AI viet bai luan neu co quy tac ro. Ly do 1: AI ho tro lay y va bo cuc, khong nhat thiet thay the lap luan cuoi. Ly do 2: Cam hoan toan de day viec dung len, con huong dan giup day kiem chung va trich dan. Ket luan: Danh gia qua trinh va lap luan goc, khong cam tuyet doi.",
+        "Phan bien: Rui ro bai nong la co that, nhung den tu cach cham diem yeu, khong chi tu cong cu. Neu bat buoc dan y, kiem nguon va bao ve mieng, AI tro thanh tro thu chu khong thay the. Vay han che can nham vao gian lan, khong xoa tro giup hoc tap.",
+        "Ket luan: Cam ngat kho thi hanh va lech voi thuc te noi lam viec. Chinh sach chat: cong khai dung AI, giu luan diem va bang chung cua hoc sinh, cham tu duy — vua bao ve hoc, vua giu ho tro huu ich.",
       ],
       against: [
-        "Bai viet do AI tao co the che giau viec hoc sinh chua hieu bai.",
-        "Du khai bao dung AI, giao vien van kho danh gia nang luc that.",
-        "Bai luan cuoi cung phai the hien tu duy doc lap cua hoc sinh.",
+        "Lap luan: Khong nen coi viec dung AI viet bai luan la mac dinh. Ly do 1: Viet luan ren phan tich doc lap; giao cau cho may lam yeu ky nang do. Ly do 2: Giao vien kho tach van AI va hieu biet that, diem mat gia tri. Ket luan: Phan viet cot loi phai do hoc sinh tu viet.",
+        "Phan bien: Goi AI la 'tro giup trung lap' coi nhe viec no co the viet ca doan ma hoc sinh khong nam vung. Cong khai co ich nhung khong thay the viec tu xay dung lap luan. Neu muc tieu la tu duy doc lap, de AI soan bai lam yeu tin hieu danh gia.",
+        "Ket luan: Co the day AI o bai rieng, khong de bai cham diem phu thuoc model. Voi bai luan tinh diem, tieu chuan chat — van va lap luan do hoc sinh tao — bao ve ket qua hoc tot hon.",
       ],
     },
   },
@@ -156,12 +156,16 @@ function demoReply(system) {
       }
       var generic = {
         en: {
-          for: "On this topic, the case in favor is practical: benefits can outweigh risks with clear safeguards and accountability.",
-          against: "On this topic, caution is warranted: costs, unintended harms, and weaker evidence mean we should not rush ahead.",
+          for:
+            "Claim: The affirmative side is stronger when benefits are concrete and risks are manageable. Reason 1: Clear rules and oversight can capture gains without ignoring harm. Reason 2: Rejecting the idea entirely discards useful options instead of improving design. Conclusion: Support the proposal with conditions, not a blank check.",
+          against:
+            "Claim: The negative side is stronger when costs and uncertainty are material. Reason 1: Unintended consequences and weak evidence mean the burden of proof is not met. Reason 2: Safer alternatives exist without locking in the proposed path. Conclusion: Oppose or delay until safeguards and evidence improve.",
         },
         vi: {
-          for: "Ve chu de nay, ben ung ho nhan manh loi ich thuc te neu co bien phap bao ve ro rang.",
-          against: "Ve chu de nay, ben phan doi nhan manh rui ro, chi phi va can than trong khi mo rong.",
+          for:
+            "Lap luan: Ben ung ho manh hon khi loi ich ro va rui ro kiem soat duoc. Ly do 1: Quy tac va giam sat giup can bang. Ly do 2: Bac bo toan bo se mat lua chon huu ich. Ket luan: Ung ho co dieu kien, khong de trong.",
+          against:
+            "Lap luan: Ben phan doi manh hon khi chi phi va bat dinh ro. Ly do 1: He qua phu va bang chung yeu nen chua du de chap nhan. Ly do 2: Con phuong an an toan hon. Ket luan: Phan doi hoac hoan cho den khi co bao ve va bang chung tot hon.",
         },
       };
       resolve(generic[lang][side]);
@@ -171,14 +175,57 @@ function demoReply(system) {
 
 function systemPrompt(side) {
   var lang = state.lang === "vi" ? "Vietnamese" : "English";
-  var stance = side === "for" ? "FOR (in favor of the topic)" : "AGAINST (opposed to the topic)";
-  return (
-    "You are a sharp, concise debate AI arguing strictly " +
-    stance +
-    ". Reply in " +
-    lang +
-    " only. Be persuasive, use 1-2 concrete reasons, stay under 120 words. Do not switch sides."
-  );
+  var stance =
+    side === "for"
+      ? "FOR (in favor of the topic / proposal)"
+      : "AGAINST (opposed to the topic / proposal)";
+  return [
+    "You are a rigorous debate advocate arguing strictly " + stance + ".",
+    "Reply in " + lang + " only. Never switch sides.",
+    "Write a tight argument, not slogans. Structure every reply as:",
+    "1) Claim (one clear sentence).",
+    "2) Reasons (2–3 reasons; each reason must explain why, not just assert).",
+    "3) Support (example, mechanism, comparison, or plausible evidence — no fabricated statistics or fake citations).",
+    "4) If the user message includes the opponent's text: Rebuttal (address their strongest point directly).",
+    "5) Conclusion (one sentence that follows from the reasons).",
+    "Rules: stay under 220 words; no empty rhetoric; no both-sides hedging; no admitting the opposite stance is correct.",
+  ].join(" ");
+}
+
+function buildUserPrompt(side, round) {
+  var phase =
+    round === 1 ? "opening" : round >= state.rounds ? "closing" : "rebuttal";
+  var opponent =
+    side === "for"
+      ? state.historyAgainst[state.historyAgainst.length - 1] || ""
+      : state.historyFor[state.historyFor.length - 1] || "";
+
+  var lines = [
+    'Topic: "' + state.topic + '".',
+    "Phase: " + phase + " (round " + round + " of " + state.rounds + ").",
+  ];
+
+  if (round === 1) {
+    lines.push(
+      side === "for"
+        ? "Give a rigorous opening case in favor of the topic."
+        : "Give a rigorous opening case against the topic."
+    );
+  } else {
+    lines.push("Opponent's last argument:");
+    lines.push('"' + opponent + '"');
+    lines.push(
+      side === "for"
+        ? "Rebut their strongest points and advance your affirmative case with tighter reasoning."
+        : "Rebut their strongest points and advance your negative case with tighter reasoning."
+    );
+  }
+
+  if (round >= state.rounds) {
+    lines.push("End with a firm closing that summarizes why your side should win.");
+  }
+
+  return lines.join("\n");
 }
 
 function roundLabel(round, total) {
@@ -205,9 +252,9 @@ function addBubble(side, text, round) {
 
 function escapeHtml(s) {
   return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
     .replace(/\n/g, "<br/>");
 }
 
@@ -231,32 +278,22 @@ async function runRound(round) {
   var forSide = state.swapped ? "against" : "for";
   var againstSide = state.swapped ? "for" : "against";
 
-  var userFor =
-    round === 1
-      ? 'Topic: "' + state.topic + '". Give your opening argument.'
-      : 'Topic: "' +
-        state.topic +
-        '". Opponent said: "' +
-        (state.historyAgainst[state.historyAgainst.length - 1] || "") +
-        '". Rebut and advance your case.';
-
-  var userAgainst =
-    round === 1
-      ? 'Topic: "' + state.topic + '". Give your opening argument against it.'
-      : 'Topic: "' +
-        state.topic +
-        '". Opponent said: "' +
-        (state.historyFor[state.historyFor.length - 1] || "") +
-        '". Rebut and advance your case.';
-
   setStatus(true, state.lang === "vi" ? "AI ung ho dang trinh bay..." : "Advocate is speaking...");
   try {
-    var textFor = await callAI({ side: "for", system: systemPrompt(forSide), user: userFor });
+    var textFor = await callAI({
+      side: "for",
+      system: systemPrompt(forSide),
+      user: buildUserPrompt("for", round),
+    });
     state.historyFor.push(textFor);
     addBubble("for", textFor, round);
 
     setStatus(true, state.lang === "vi" ? "AI phan doi dang trinh bay..." : "Challenger is speaking...");
-    var textAgainst = await callAI({ side: "against", system: systemPrompt(againstSide), user: userAgainst });
+    var textAgainst = await callAI({
+      side: "against",
+      system: systemPrompt(againstSide),
+      user: buildUserPrompt("against", round),
+    });
     state.historyAgainst.push(textAgainst);
     addBubble("against", textAgainst, round);
 
