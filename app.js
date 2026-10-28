@@ -10,6 +10,7 @@ const state = {
   swapped: false,
   historyFor: [],
   historyAgainst: [],
+  busy: false,
 };
 
 function loadSettings() {
@@ -168,7 +169,7 @@ function demoReply(system) {
         },
       };
       resolve(generic[lang][side]);
-    }, 350);
+    }, 600);
   });
 }
 
@@ -207,20 +208,50 @@ function roundLabel(round, total) {
   return state.lang === "vi" ? "Phan bien" : "Rebuttal";
 }
 
-function addBubble(side, text, round) {
+function wait(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+function setSpeaking(side) {
+  var forEl = document.querySelector(".side-for");
+  var againstEl = document.querySelector(".side-against");
+  if (forEl) forEl.classList.toggle("speaking", side === "for");
+  if (againstEl) againstEl.classList.toggle("speaking", side === "against");
+}
+
+function clearSpeaking() {
+  setSpeaking(null);
+}
+
+function addPlaceholder(side, round) {
   var box = document.getElementById(side === "for" ? "messages-for" : "messages-against");
-  if (!box) return;
+  if (!box) return null;
   var div = document.createElement("div");
-  div.className = "bubble";
+  div.className = "bubble bubble-pending";
+  div.setAttribute("data-pending", "1");
   div.innerHTML =
     '<span class="round-tag">' +
     roundLabel(round, state.rounds) +
     " · R" +
     round +
     "</span>" +
-    escapeHtml(text);
+    '<span class="pending-dots">…</span>';
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function finalizeBubble(el, text) {
+  if (!el) return;
+  el.classList.remove("bubble-pending");
+  el.removeAttribute("data-pending");
+  var tag = el.querySelector(".round-tag");
+  var tagHtml = tag ? tag.outerHTML : "";
+  el.innerHTML = tagHtml + escapeHtml(text);
+  var box = el.parentElement;
+  if (box) box.scrollTop = box.scrollHeight;
 }
 
 function escapeHtml(s) {
@@ -243,48 +274,82 @@ function setStatus(visible, text) {
   if (actions) actions.classList.toggle("hidden", visible);
 }
 
+async function speakSide(side, stanceSide, round) {
+  setSpeaking(side);
+  var label =
+    side === "for"
+      ? state.lang === "vi"
+        ? "FOR dang trinh bay…"
+        : "FOR is speaking…"
+      : state.lang === "vi"
+        ? "AGAINST dang trinh bay…"
+        : "AGAINST is speaking…";
+  setStatus(true, label);
+
+  var pending = addPlaceholder(side, round);
+  var text = await callAI({
+    side: side,
+    system: systemPrompt(stanceSide),
+    user: buildUserPrompt(side, round),
+  });
+  finalizeBubble(pending, text);
+  if (side === "for") state.historyFor.push(text);
+  else state.historyAgainst.push(text);
+  await wait(400);
+}
+
 async function runRound(round) {
+  if (state.busy) return;
+  state.busy = true;
   state.currentRound = round;
   var roundEl = document.getElementById("round-num");
   if (roundEl) roundEl.textContent = String(round);
   updateMatchupUI();
 
-  var forSide = state.swapped ? "against" : "for";
-  var againstSide = state.swapped ? "for" : "against";
+  var forStance = state.swapped ? "against" : "for";
+  var againstStance = state.swapped ? "for" : "against";
 
-  setStatus(true, state.lang === "vi" ? "AI ung ho dang trinh bay..." : "Advocate is speaking...");
+  var nextBtn = document.getElementById("btn-next-round");
+  var finishBtn = document.getElementById("btn-finish");
+  if (nextBtn) nextBtn.disabled = true;
+  if (finishBtn) finishBtn.disabled = true;
+
   try {
-    var textFor = await callAI({ side: "for", system: systemPrompt(forSide), user: buildUserPrompt("for", round) });
-    state.historyFor.push(textFor);
-    addBubble("for", textFor, round);
-
-    setStatus(true, state.lang === "vi" ? "AI phan doi dang trinh bay..." : "Challenger is speaking...");
-    var textAgainst = await callAI({
-      side: "against",
-      system: systemPrompt(againstSide),
-      user: buildUserPrompt("against", round),
-    });
-    state.historyAgainst.push(textAgainst);
-    addBubble("against", textAgainst, round);
+    // One side at a time — FOR first, then AGAINST
+    await speakSide("for", forStance, round);
+    clearSpeaking();
+    await wait(250);
+    await speakSide("against", againstStance, round);
+    clearSpeaking();
 
     setStatus(false);
-    var nextBtn = document.getElementById("btn-next-round");
     if (nextBtn) {
+      nextBtn.disabled = false;
       if (round >= state.rounds) nextBtn.classList.add("hidden");
       else nextBtn.classList.remove("hidden");
     }
+    if (finishBtn) finishBtn.disabled = false;
   } catch (err) {
+    clearSpeaking();
+    document.querySelectorAll(".bubble-pending").forEach(function (el) {
+      el.remove();
+    });
     setStatus(true, "");
     var st = document.getElementById("status-text");
     if (st) st.textContent = "Error: " + (err.message || String(err));
     var actions = document.getElementById("debate-actions");
     if (actions) actions.classList.remove("hidden");
-    var nextBtn2 = document.getElementById("btn-next-round");
-    if (nextBtn2) nextBtn2.classList.add("hidden");
+    if (nextBtn) {
+      nextBtn.classList.add("hidden");
+      nextBtn.disabled = false;
+    }
+    if (finishBtn) finishBtn.disabled = false;
   }
+  state.busy = false;
 }
 
 async function startDebate() {
+  if (state.busy) return;
   var topicInput = document.getElementById("topic-input");
   var topic = topicInput ? topicInput.value.trim() : "";
   if (!topic) {
@@ -309,6 +374,7 @@ async function startDebate() {
 }
 
 function finishDebate() {
+  if (state.busy) return;
   document.getElementById("result-topic").textContent = state.topic;
   document.getElementById("vote-feedback").classList.add("hidden");
   document.querySelectorAll(".vote-btn").forEach(function (b) {
@@ -393,11 +459,17 @@ function bind() {
   if (btnStart) btnStart.addEventListener("click", startDebate);
 
   var btnNew = document.getElementById("btn-new");
-  if (btnNew) btnNew.addEventListener("click", function () { showScreen("screen-setup"); });
+  if (btnNew) {
+    btnNew.addEventListener("click", function () {
+      if (state.busy) return;
+      showScreen("screen-setup");
+    });
+  }
 
   var btnNext = document.getElementById("btn-next-round");
   if (btnNext) {
     btnNext.addEventListener("click", function () {
+      if (state.busy) return;
       if (state.currentRound < state.rounds) runRound(state.currentRound + 1);
     });
   }
@@ -408,7 +480,9 @@ function bind() {
   var voteFor = document.getElementById("vote-for");
   if (voteFor) {
     voteFor.addEventListener("click", function () {
-      document.querySelectorAll(".vote-btn").forEach(function (b) { b.classList.remove("selected"); });
+      document.querySelectorAll(".vote-btn").forEach(function (b) {
+        b.classList.remove("selected");
+      });
       voteFor.classList.add("selected");
       var fb = document.getElementById("vote-feedback");
       if (fb) {
@@ -421,7 +495,9 @@ function bind() {
   var voteAgainst = document.getElementById("vote-against");
   if (voteAgainst) {
     voteAgainst.addEventListener("click", function () {
-      document.querySelectorAll(".vote-btn").forEach(function (b) { b.classList.remove("selected"); });
+      document.querySelectorAll(".vote-btn").forEach(function (b) {
+        b.classList.remove("selected");
+      });
       voteAgainst.classList.add("selected");
       var fb = document.getElementById("vote-feedback");
       if (fb) {
@@ -442,6 +518,7 @@ function bind() {
   var btnSwap = document.getElementById("btn-swap");
   if (btnSwap) {
     btnSwap.addEventListener("click", async function () {
+      if (state.busy) return;
       var a = state.settings.providerFor;
       state.settings.providerFor = state.settings.providerAgainst;
       state.settings.providerAgainst = a;
