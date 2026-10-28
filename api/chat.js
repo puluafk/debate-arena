@@ -30,18 +30,14 @@ module.exports = async function handler(req, res) {
     if (!apiKey || typeof apiKey !== "string") {
       return res.status(400).json({ error: "Missing API key" });
     }
-    if (!provider || ["openai", "gemini", "claude"].indexOf(provider) === -1) {
+    if (!provider || (provider !== "openai" && provider !== "gemini")) {
       return res.status(400).json({ error: "Invalid provider" });
     }
 
-    var text;
-    if (provider === "openai") {
-      text = await callOpenAI(apiKey, model, system, messages);
-    } else if (provider === "gemini") {
-      text = await callGemini(apiKey, model, system, messages);
-    } else {
-      text = await callClaude(apiKey, model, system, messages);
-    }
+    var text =
+      provider === "openai"
+        ? await callOpenAI(apiKey, model, system, messages)
+        : await callGemini(apiKey, model, system, messages);
 
     return res.status(200).json({ text: text });
   } catch (err) {
@@ -55,8 +51,8 @@ module.exports = async function handler(req, res) {
 async function callOpenAI(apiKey, model, system, messages) {
   var body = {
     model: model || "gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 700,
+    temperature: 0.8,
+    max_tokens: 400,
     messages: [{ role: "system", content: system || "You are a debate assistant." }].concat(
       (messages || []).map(function (m) {
         return {
@@ -121,7 +117,7 @@ async function callGemini(apiKey, model, system, messages) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: contents,
-      generationConfig: { temperature: 0.7, maxOutputTokens: 700 },
+      generationConfig: { temperature: 0.8, maxOutputTokens: 400 },
     }),
   });
 
@@ -138,43 +134,6 @@ async function callGemini(apiKey, model, system, messages) {
   return parts
     .map(function (p) {
       return p.text || "";
-    })
-    .join("")
-    .trim();
-}
-
-async function callClaude(apiKey, model, system, messages) {
-  var body = {
-    model: model || "claude-sonnet-4-20250514",
-    max_tokens: 700,
-    temperature: 0.7,
-    system: system || "You are a debate assistant.",
-    messages: (messages || []).map(function (m) {
-      return {
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content,
-      };
-    }),
-  };
-
-  var r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  var data = await r.json();
-  if (!r.ok) {
-    throw new Error((data.error && data.error.message) || "Claude HTTP " + r.status);
-  }
-  var blocks = data.content || [];
-  return blocks
-    .map(function (b) {
-      return b.type === "text" ? b.text || "" : "";
     })
     .join("")
     .trim();
