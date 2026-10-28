@@ -89,17 +89,101 @@ textarea:focus, input:focus, select:focus { outline: none; border-color: var(--a
 .vote-name { font-weight: 700; font-size: 1.05rem; }
 .vote-feedback { font-weight: 600; color: var(--accent-2); margin-bottom: 1rem; }
 .result-actions { display: flex; flex-direction: column; gap: 0.6rem; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; overflow-y: auto; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: var(--shadow); }
-.modal-wide { max-width: 480px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.btn-close { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; }
-.modal-hint { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.25rem; }
-.key-section { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
-.key-title { font-family: "Space Grotesk", sans-serif; font-size: 1rem; margin-bottom: 0.35rem; }
-.field-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
+
+/* Settings modal — scrollable, show all key panels */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 480px;
+  margin: 1rem auto 2rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+}
+.modal-wide { max-width: 520px; }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem 0.5rem;
+  flex-shrink: 0;
+}
+.modal-header h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; }
+.btn-close {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.modal-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 0 1.25rem 0.75rem;
+  flex-shrink: 0;
+}
+.modal-body {
+  padding: 0 1.25rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.key-section {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.85rem;
+}
+.key-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+.field-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.6rem; }
 .field-hint a { color: var(--accent-2); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem; }
+.key-section .field-label { margin-bottom: 0.3rem; }
+.key-section input,
+.key-section select {
+  margin-bottom: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+}
+.key-section select:last-child,
+.key-section input:last-child {
+  margin-bottom: 0;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem 1.15rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
 .footer { margin-top: auto; padding-top: 2rem; text-align: center; color: var(--muted); font-size: 0.8rem; }
 .created-by { margin-top: 0.35rem; font-weight: 700; color: #a5b4fc; }
 
